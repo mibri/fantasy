@@ -75,7 +75,8 @@ def kth_available_vorp(avail, pos_order, pos_vorp, k):
 POLICIES = ("MLV", "MLV_VONA", "BPA", "ECR", "ZERO_RB", "HERO_RB", "ROBUST_RB")
 
 
-def policy_scores(name, c):
+def policy_scores(name, c, params=None):
+    params = params or {}
     pos, vorp, rnd = c["pos"], c["vorp"], c["rnd"]
     S, P = c["avail"].shape
     proj = c["proj"]
@@ -83,11 +84,17 @@ def policy_scores(name, c):
 
     # --- marginal value to the optimal starting lineup, plus bench option value ---
     th_p = c["th"][:, pos]                              # (S,P) threshold for each player
-    start_gain = jnp.maximum(proj[None, :] - th_p, 0.0)
+    start_gain = proj[None, :] - th_p
     depth = jnp.maximum(c["pos_count"][:, pos] - MIN_NEED[pos][None, :], 0)
-    bench_w = BENCH_BASE * (BENCH_DECAY ** depth)
+    bb = params.get("bench_base", BENCH_BASE)
+    bd = params.get("bench_decay", BENCH_DECAY)
+    bench_w = bb * (bd ** depth)
     bench_gain = bench_w * jnp.maximum(proj[None, :] - c["repl"][pos][None, :], 0.0)
-    mlv = start_gain + bench_gain
+    # `additive` stacks starter gain and depth value; otherwise a player is
+    # counted as either a starter upgrade or bench depth, never both.
+    mlv = jnp.where(params.get("additive", False),
+                    jnp.maximum(start_gain, 0.0) + bench_gain,
+                    jnp.where(start_gain > 0, start_gain, bench_gain))
 
     if name == "MLV":
         return mlv
@@ -107,7 +114,7 @@ def policy_scores(name, c):
     raise ValueError(name)
 
 
-def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0):
+def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None):
     pos, ecr, vorp, proj = d["pos"], d["ecr"], d["vorp"], d["proj"]
     P = pos.shape[0]
     order = snake_order()
@@ -140,7 +147,7 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0):
                    pos_count=pc_t, th=th, repl=d["repl"],
                    next_turn_vorp_by_pos=jnp.stack(nxt, axis=1))
 
-        score = jnp.where(t == my_slot, policy_scores(policy, ctx), -perceived)
+        score = jnp.where(t == my_slot, policy_scores(policy, ctx, params), -perceived)
         pick = jnp.argmax(jnp.where(legal, score, -jnp.inf), axis=1)
 
         avail = avail.at[ar, pick].set(False)
