@@ -215,3 +215,71 @@ Our policies beat ECR-following opponents by a wide margin, but that number is
 any policy optimising against them is flattered. The internally valid
 comparison is **policy versus policy at the same draft slot**, where all
 policies share the same projections and the same opponents.
+
+## Backtest (added after the fact)
+
+The original write-up said the projections could not be backtested because
+historical preseason consensus was unavailable. That was wrong: DynastyProcess
+publishes the full FantasyPros ECR archive as `db_fpecr.csv.gz` (100 MB), which
+I had missed by only probing the uncompressed filename. It carries
+`redraft-overall` snapshots from days before Week 1 for 2021-2024, plus an
+August 2025 snapshot. `src/backtest.py` uses them.
+
+### How good is the market?
+
+Preseason consensus rank predicts realised season points in this league's
+scoring at **r = 0.79 to 0.82** across QB/RB/WR/TE. That is the bar.
+
+### Does the scoring ratio add anything out of sample?
+
+This is the model's one genuine claim, so it is the thing to test. Using only
+data available before each season:
+
+| Position | market alone | ratio vs. residual | market x ratio |
+|---|---|---|---|
+| QB | 0.793 | **+0.053** | 0.788 |
+| RB | 0.806 | -0.052 | 0.804 |
+| WR | 0.815 | -0.045 | 0.814 |
+| TE | 0.792 | +0.079 | 0.793 |
+
+**Essentially nothing.** The ratio is a real, persistent player trait - prior
+ratio predicts current ratio at r = +0.55 (QB), +0.46 (RB), +0.35 (WR),
++0.42 (TE) - but its effect on a season's points is swamped:
+
+| Position | predictable ratio spread | worth | share of outcome variance |
+|---|---|---|---|
+| QB | 0.045 | **~12.5 pts/season** | 1.22% |
+| RB | 0.025 | ~3.9 pts | 0.14% |
+| WR | 0.012 | ~1.7 pts | 0.03% |
+| TE | 0.009 | ~1.0 pts | 0.02% |
+
+Against a season-points SD near 100, choosing between two similarly ranked
+quarterbacks on their conversion rate is worth about **one good week**.
+
+**This corrects an earlier overstatement.** The custom-scoring edge measured at
++21% relative title odds was computed in a simulation that *assumed* the ratio
+was known and true. Out of sample it is close to undetectable. What survives is
+the *structural* half of the scoring work - replacement levels, positional
+value, flex-aware lineup construction - and that half needs no forecasting at
+all. It is arithmetic on the league's own rules: QB replacement really is 303
+points here, whatever anyone predicts.
+
+### Is the consensus systematically biased anywhere?
+
+Scanning preseason features against the residual (points beyond what the rank
+implies):
+
+| Signal | Strongest correlation |
+|---|---|
+| QB, prior-season points | +0.198 |
+| QB, prior-season games | +0.147 |
+| WR, prior-season games | +0.126 |
+| WR rookies/2nd-year vs veterans | -7.3 vs +3.4 points |
+| everything else (age, experience, expert disagreement, rank) | \|r\| < 0.10 |
+
+The market is close to efficient. The largest bias found is r = 0.20 at
+quarterback, about 4% of residual variance.
+
+**Caveat on power.** Five seasons, ~2,500 player-seasons, and a crude
+within-season rolling smoother as the market control. An effect of r = 0.10
+would be hard to detect here. "No signal found" is not "no signal exists".
