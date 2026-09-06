@@ -155,10 +155,15 @@ def policy_scores(name, c, params=None):
 
 
 def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None,
-              smart_slots=None):
+              smart_slots=None, opp_board=None):
     """smart_slots: other seats that ALSO draft on value rather than consensus.
     The default (None) makes every opponent a consensus-follower, which is the
-    optimistic case; a real league usually contains a few value drafters."""
+    optimistic case; a real league usually contains a few value drafters.
+
+    opp_board: an alternative projection/VORP set those smart opponents draft
+    from. Passing a STANDARD-scoring board here models the realistic case - a
+    sharp opponent doing value-based drafting off ordinary rankings, rather than
+    one who has re-derived every value under this league's custom rules."""
     pos, ecr, vorp, proj = d["pos"], d["ecr"], d["vorp"], d["proj"]
     P = pos.shape[0]
     order = snake_order()
@@ -196,7 +201,15 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None,
         if smart_slots:
             for extra in smart_slots:
                 smart = smart | (t == extra)
-        score = jnp.where(smart, policy_scores(policy, ctx, params), -perceived)
+        my_score = policy_scores(policy, ctx, params)
+        if opp_board is not None:
+            octx = dict(ctx, proj=opp_board["proj"], vorp=opp_board["vorp"],
+                        repl=opp_board["repl"])
+            _, oth = lineup_and_thresholds(rv_t, opp_board["repl"])
+            octx["th"] = oth
+            opp_smart = policy_scores(policy, octx, params)
+            my_score = jnp.where(t == my_slot, my_score, opp_smart)
+        score = jnp.where(smart, my_score, -perceived)
         pick = jnp.argmax(jnp.where(legal, score, -jnp.inf), axis=1)
 
         avail = avail.at[ar, pick].set(False)
