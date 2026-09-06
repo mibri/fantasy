@@ -35,6 +35,34 @@ SEASON_W = {2025: 0.60, 2024: 0.28, 2023: 0.12}
 RESID_SD_PPG = {"QB": 5.50, "RB": 4.55, "WR": 3.73, "TE": 2.66}
 EXP_GAMES = {"QB": 15.8, "RB": 15.6, "WR": 15.4, "TE": 14.9}
 
+# Measured year-over-year regression slopes (see docs/methodology.md). A preseason
+# rank is a *forecast* of a finish, so expected production is the finish-rank curve
+# shrunk toward the positional mean by exactly this slope.
+PERSIST_SLOPE = {"QB": 0.581, "RB": 0.710, "WR": 0.797, "TE": 0.795}
+
+
+def finish_curve(sc, pos, n=60, seasons=(2022, 2023, 2024, 2025)):
+    """Mean standard-PPR season points by end-of-season positional finish rank."""
+    used = (sc.attempts.fillna(0) + sc.carries.fillna(0) + sc.targets.fillna(0)) > 0
+    s = sc[used].groupby(["player_id", "position", "season"], as_index=False).agg(
+        std=("fantasy_points_ppr", "sum"))
+    rows = []
+    for yr in seasons:
+        v = np.sort(s[(s.position == pos) & (s.season == yr)]["std"].values)[::-1][:n]
+        if len(v) == 0:
+            continue
+        rows.append(np.pad(v, (0, max(0, n - len(v))), constant_values=v[-1]))
+    return np.vstack(rows).mean(axis=0)
+
+
+def expected_by_rank(sc, pos, ranks):
+    """E[standard-PPR season points | preseason positional rank]."""
+    curve = finish_curve(sc, pos)
+    m = curve[:24].mean()
+    slope = PERSIST_SLOPE[pos]
+    idx = np.clip(np.round(np.asarray(ranks)).astype(int) - 1, 0, len(curve) - 1)
+    return m + slope * (curve[idx] - m)
+
 
 def player_history(sc):
     """Per player: standard-PPR ppg, league ppg, games, and translation ratio."""
@@ -62,15 +90,16 @@ def build():
     hist = player_history(sc)
     df = board.merge(hist, left_on="gsis_id", right_on="player_id", how="left")
 
-    # ---- 1. market volume curve: ECR positional rank -> standard-PPR ppg ----
-    df["market_std_ppg"] = np.nan
+    # ---- 1. market volume: preseason positional rank -> expected season points ----
+    # Fitting historical ppg against current rank (an earlier approach) depressed
+    # the top of the curve, because highly ranked young players with short or weak
+    # histories sat in the fit set and dragged it down - Drake Maye, the market's
+    # QB3, came out BELOW QB12 replacement. The finish-rank curve, shrunk by the
+    # measured persistence slope, is the right estimator.
+    df["market_std_pts"] = np.nan
     for pos in ["QB", "RB", "WR", "TE"]:
         m = (df.pos == pos)
-        fit = df[m & df.std_ppg_w.notna() & (df.raw_games >= 6)].sort_values("pos_rank")
-        if len(fit) >= 8:
-            iso = IsotonicRegression(increasing=False, out_of_bounds="clip")
-            iso.fit(fit.pos_rank.values, fit.std_ppg_w.values)
-            df.loc[m, "market_std_ppg"] = iso.predict(df.loc[m, "pos_rank"].values)
+        df.loc[m, "market_std_pts"] = expected_by_rank(sc, pos, df.loc[m, "pos_rank"].values)
 
     # ---- 2. player-specific scoring translation ratio, shrunk to positional mean ----
     pos_mean = df.groupby("pos").apply(
@@ -83,17 +112,16 @@ def build():
     df["ratio_prior"] = prior
 
     # ---- 3. combine ----
-    df["proj_ppg"] = df.market_std_ppg * df.ratio
+    # The finish-rank curve is already a SEASON total including games missed, so
+    # availability must not be multiplied in again.
+    df["proj_pts"] = df.market_std_pts * df.ratio
+    df["proj_ppg"] = df.proj_pts / df.pos.map(EXP_GAMES)
     return df
 
 
 def add_season_projection(df):
     d = df.copy()
-    base = d.pos.map(EXP_GAMES)
-    own = (d.raw_games / 3.0).clip(upper=17)
-    trust = (d.raw_games.fillna(0) / 30.0).clip(0, 0.5)
-    d["exp_games"] = np.where(d.raw_games.notna(), trust * own + (1 - trust) * base, base)
-    d["proj_pts"] = d.proj_ppg * d.exp_games
+    d["exp_games"] = d.pos.map(EXP_GAMES)
     sd_ppg = d.pos.map(RESID_SD_PPG)
     d["proj_sd"] = np.sqrt((sd_ppg * d.exp_games) ** 2 + (d.proj_ppg * 2.6) ** 2)
     return d

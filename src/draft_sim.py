@@ -15,7 +15,13 @@ N_TEAMS, N_ROUNDS = 12, 15
 N_PICKS = N_TEAMS * N_ROUNDS
 KDST_MIN_ROUND = 12
 MAXPOS = 8
-BENCH_BASE, BENCH_DECAY = 0.35, 0.45     # option value of a backup, decaying with depth
+# Bench-depth weight, TUNED by championship probability over a grid (see
+# data/processed/tuning.csv): additive stacking at 0.55-1.10 scored 0.346-0.348
+# versus 0.283 for the non-additive form. Depth matters more than a
+# starters-only model implies, because 5 bench spots plus injuries mean a
+# thin roster bleeds points. 0.70 sits mid-plateau.
+BENCH_BASE, BENCH_DECAY = 0.70, 0.45
+MLV_ADDITIVE = True
 
 
 def snake_order(n_teams=N_TEAMS, n_rounds=N_ROUNDS):
@@ -92,7 +98,7 @@ def policy_scores(name, c, params=None):
     bench_gain = bench_w * jnp.maximum(proj[None, :] - c["repl"][pos][None, :], 0.0)
     # `additive` stacks starter gain and depth value; otherwise a player is
     # counted as either a starter upgrade or bench depth, never both.
-    mlv = jnp.where(params.get("additive", False),
+    mlv = jnp.where(params.get("additive", MLV_ADDITIVE),
                     jnp.maximum(start_gain, 0.0) + bench_gain,
                     jnp.where(start_gain > 0, start_gain, bench_gain))
 

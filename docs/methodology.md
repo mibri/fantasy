@@ -70,16 +70,35 @@ Each factor is estimated from whichever source knows it best.
 ### Volume and role <- the market
 
 The FantasyPros consensus reflects camp reports, depth charts and injury news.
-An isotonic (monotone-decreasing) regression maps positional ECR rank to
-standard-PPR points per game.
+A preseason rank is a *forecast of a finish*, so expected production is the
+observed points-by-finish-rank curve (2022-2025) shrunk toward the positional
+mean by the measured year-over-year persistence slope:
 
-> **A model error worth recording.** An earlier version projected volume from
-> each player's own recency-weighted history. It systematically underrated
-> second-year players whose roles were changing (Egbuka, Burden, Golden ranked
-> 100+ spots below consensus) and overrated declining veterans. Adding an
-> empirical aging curve helped but did not fix the cause: *history is a poor
-> estimator of next season's volume for anyone whose role is changing.* The
-> market is simply better at this, so volume is now taken entirely from it.
+```
+E[season points | preseason rank r] = m + slope x (finish_curve(r) - m)
+```
+
+> **Two model errors worth recording.**
+>
+> 1. The first version projected volume from each player's own recency-weighted
+>    history. It systematically underrated second-year players whose roles were
+>    changing (Egbuka, Burden, Golden fell 100+ spots below consensus) and
+>    overrated declining veterans. An empirical aging curve helped but did not
+>    fix the cause: *history is a poor estimator of next season's volume for
+>    anyone whose role is changing.*
+> 2. The second version fitted an isotonic curve of historical points-per-game
+>    against *current* rank. This depressed the top of the curve, because highly
+>    ranked young players with short or weak histories sat inside the fit set and
+>    dragged it down. Drake Maye - the market's QB3 - came out **below QB12
+>    replacement level**, which is plainly wrong. The finish-rank curve above
+>    fixed it (Maye 291 -> 381).
+>
+> The cost of this choice is real and worth stating: player-specific volume
+> information is now discarded entirely. Jared Goff's recent production is well
+> above his consensus rank, and the model no longer credits him for it. The
+> defence is that the market has already seen that history *and* the reasons it
+> may not repeat, and the measured QB persistence slope of 0.581 says heavy
+> regression is warranted.
 
 ### Scoring translation <- the player
 
@@ -156,6 +175,15 @@ first-round pick here despite the inflated QB scoring.**
   Naive "best VORP available" drafts 6 RBs and 3 WRs, because raw VORP ignores
   that only 2 RB + 2 FLEX can start. MLV fixes this and yields realistic
   4.5 RB / 3.8 WR / 2.8 TE / 1.9 QB rosters.
+
+  **The bench-depth weight was tuned, not assumed.** Sweeping it against
+  championship probability (`data/processed/tuning.csv`) showed that counting a
+  player as *either* a starter upgrade *or* bench depth - the theoretically
+  tidier form, which avoids double-counting - scored **0.283**, while stacking
+  the two terms scored **0.346-0.348** across a broad plateau of weights
+  (0.55-1.10). Depth is worth more than a starters-only model implies: with only
+  5 bench spots, byes and in-season injuries mean a thin roster bleeds points.
+  The tidier formula was the worse one, and the simulation is what settled it.
 
 `src/season_sim.py` then plays each drafted league out: projection error, then
 gamma-distributed weekly noise matching the measured mean-SD relationship and

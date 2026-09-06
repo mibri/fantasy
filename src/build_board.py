@@ -35,7 +35,7 @@ def main():
     skill = add_season_projection(build())
     skill = skill[["player", "pos", "team", "ecr", "sd", "bye", "age", "gsis_id",
                    "proj_ppg", "exp_games", "proj_pts", "proj_sd", "ratio",
-                   "ratio_raw", "raw_games", "market_std_ppg"]]
+                   "ratio_raw", "raw_games", "market_std_pts"]]
 
     # --- kickers: map ECR positional rank -> historical points at that rank ---
     k = kicker_seasons(); k = k[k.g >= 8]
@@ -54,11 +54,11 @@ def main():
         b["proj_sd"] = sd
         b["proj_ppg"] = b.proj_pts / 16.0
         b["exp_games"] = 16.0
-        for c in ["ratio", "ratio_raw", "raw_games", "market_std_ppg"]:
+        for c in ["ratio", "ratio_raw", "raw_games", "market_std_pts"]:
             b[c] = np.nan
         extra.append(b[["player", "pos", "team", "ecr", "sd", "bye", "age", "gsis_id",
                         "proj_ppg", "exp_games", "proj_pts", "proj_sd", "ratio",
-                        "ratio_raw", "raw_games", "market_std_ppg"]])
+                        "ratio_raw", "raw_games", "market_std_pts"]])
 
     full = pd.concat([skill] + extra, ignore_index=True)
     full = full[full.proj_pts.notna()].copy()
