@@ -1,0 +1,462 @@
+<title>The Burrow Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#EDEFEA; --surface:#FFFFFF; --surface-2:#F5F6F2; --ink:#131C19;
+  --ink-2:#414E48; --ink-3:#77827C; --line:#D8DCD5; --line-2:#C3C9C0;
+  --accent:#8A5A0B; --accent-bg:#FBF0DB; --accent-line:#D2952A;
+  --qb:#6A57C4; --rb:#2E8B3D; --wr:#1F6FBF; --te:#B14F5C;
+  --grid:#E4E7E1;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0F1A17; --surface:#16241F; --surface-2:#1C2E28; --ink:#E7EDE9;
+  --ink-2:#B2BEB8; --ink-3:#7C8A83; --line:#27392F; --line-2:#33483E;
+  --accent:#E0A22E; --accent-bg:#2A2415; --accent-line:#E0A22E;
+  --qb:#8271D6; --rb:#3FA451; --wr:#3486CE; --te:#C96470;
+  --grid:#22332B;
+}}
+:root[data-theme="dark"]{
+  --ground:#0F1A17; --surface:#16241F; --surface-2:#1C2E28; --ink:#E7EDE9;
+  --ink-2:#B2BEB8; --ink-3:#7C8A83; --line:#27392F; --line-2:#33483E;
+  --accent:#E0A22E; --accent-bg:#2A2415; --accent-line:#E0A22E;
+  --qb:#8271D6; --rb:#3FA451; --wr:#3486CE; --te:#C96470;
+  --grid:#22332B;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+h1,h2,h3{margin:0;text-wrap:balance;font-family:"Barlow Condensed",sans-serif;
+  font-weight:700;letter-spacing:.01em;line-height:1.08}
+h1{font-size:clamp(38px,7vw,62px);text-transform:uppercase}
+h2{font-size:clamp(25px,4vw,33px);text-transform:uppercase;margin-top:52px}
+h3{font-size:20px;margin-top:30px;font-family:"IBM Plex Sans",sans-serif;
+  font-weight:600;text-transform:none;letter-spacing:0}
+p{margin:14px 0;max-width:66ch}
+a{color:var(--accent)}
+.lede{font-family:"Source Serif 4",Georgia,serif;font-size:19.5px;line-height:1.55;
+  color:var(--ink-2);max-width:60ch}
+.eyebrow{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;
+  letter-spacing:.19em;text-transform:uppercase;color:var(--ink-3)}
+header.top{padding:52px 0 26px;border-bottom:2.5px solid var(--ink);margin-bottom:8px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.pill{background:var(--surface);border:1px solid var(--line-2);border-radius:999px;
+  padding:4px 12px;font-size:12.5px;color:var(--ink-2)}
+.pill b{color:var(--ink);font-weight:600}
+hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.tbl th{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+  text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--line-2)}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.tbl td.n,.tbl th.n{text-align:right;font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums}
+.tbl tr.hi td{background:var(--accent-bg)}
+.tbl tr.hi td:first-child{box-shadow:inset 3px 0 0 var(--accent-line)}
+.scroll{overflow-x:auto}
+
+/* figure */
+figure{margin:30px 0;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:18px 18px 12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.5;max-width:70ch}
+.figtitle{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:19px;
+  text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+.figsub{font-size:13px;color:var(--ink-3);margin-bottom:12px}
+.legend{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:8px}
+.lg{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2)}
+.sw{width:13px;height:3px;border-radius:2px;display:inline-block}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--ground);
+  border-radius:6px;padding:6px 9px;font-size:12px;line-height:1.4;opacity:0;
+  transition:opacity .12s;white-space:nowrap;z-index:5;
+  font-family:"IBM Plex Mono",monospace}
+.chartbox{position:relative}
+text{font-family:"IBM Plex Sans",sans-serif}
+
+/* callout */
+.call{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent-line);
+  border-radius:0 8px 8px 0;padding:15px 18px;margin:26px 0}
+.call .eyebrow{color:var(--accent);margin-bottom:5px;display:block}
+.call p{margin:5px 0}
+.rule{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;
+  padding:15px 0;border-bottom:1px solid var(--line)}
+.rule:last-child{border-bottom:0}
+.rulenum{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:26px;
+  color:var(--accent-line);line-height:1}
+.rule h3{margin:0 0 3px;font-size:16.5px}
+.rule p{margin:0;font-size:14.5px;color:var(--ink-2)}
+.tag{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:11.5px;
+  letter-spacing:.06em;padding:1px 6px;border-radius:3px;color:#fff;min-width:30px;
+  display:inline-block;text-align:center}
+.QB{background:var(--qb)}.RB{background:var(--rb)}.WR{background:var(--wr)}.TE{background:var(--te)}
+.foot{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--ink-3);line-height:1.6}
+.cta{display:inline-block;background:var(--ink);color:var(--ground);border-radius:7px;
+  padding:10px 18px;text-decoration:none;font-weight:600;font-size:15px;margin-top:6px}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">12-team · Sleeper · custom scoring · 2026</span>
+  <h1>The Burrow Line</h1>
+  <p class="lede">Your league pays quarterbacks <b>+0.27</b> for every completion and
+  <b>&minus;0.50</b> for every incompletion. That one rule sets a break-even accuracy of
+  <b>64.9%</b> — and it is the reason your draft should not look like anybody else's.</p>
+  <div class="meta">
+    <span class="pill">Consensus as of <b>4 Sep 2026</b></span>
+    <span class="pill">Scoring engine validated to <b>0.0000</b></span>
+    <span class="pill"><b>2021–2025</b> play-by-play</span>
+  </div>
+</header>
+
+<h2>The one idea</h2>
+<p>A player is not worth his point total. He is worth the gap between him and the
+<em>worst player you could have started instead</em> — his <b>replacement level</b>.
+Twelve teams start one quarterback each, so the 13th-best quarterback is free, and
+he is very good. That makes the bar for quarterbacks brutally high.</p>
+
+<figure>
+  <div class="figtitle">What a pick is actually worth</div>
+  <div class="figsub">Points above replacement, by rank within each position</div>
+  <div class="legend" id="lg1"></div>
+  <div class="chartbox"><div id="c1"></div><div class="tip" id="t1"></div></div>
+  <figcaption>Read the height, not the position. The running back and receiver lines
+  start high and fall steeply — that steepness is what your early picks buy. The
+  quarterback line starts low because replacement level is already 303 points.
+  Tight end is the odd one: a single spike, then nothing.</figcaption>
+</figure>
+
+<div class="call">
+  <span class="eyebrow">What this means</span>
+  <p>The best quarterback in the league is worth about <b>+99</b> points over a free one.
+  The best running back is worth <b>+194</b>. Even in a format that inflates quarterback
+  scoring, <b>you should not spend an early pick on one.</b></p>
+</div>
+
+<h2>Where the value lives</h2>
+<figure>
+  <div class="figtitle">The cliff</div>
+  <div class="figsub">Value of the best player still on the board, by overall pick</div>
+  <div class="chartbox"><div id="c2"></div><div class="tip" id="t2"></div></div>
+  <figcaption>Value collapses fast, then flattens into nothing. By the end of round 10
+  the best remaining player is worth essentially zero over a waiver-wire pickup — which
+  is exactly why kickers and defenses belong in the last two rounds and nowhere else.</figcaption>
+</figure>
+
+<h2>Your board</h2>
+<p>Ranked by value over replacement in <em>your</em> scoring, not standard scoring.
+The consensus rank is shown so you can see where the market disagrees.</p>
+<div class="scroll"><table class="tbl" id="topTbl"></table></div>
+
+<h2>The quarterback edge</h2>
+<p>This is the part almost nobody in your league will price correctly. A pass attempt
+is worth <span class="mono">0.77p &minus; 0.50</span>, so accuracy is paid directly.
+Measured over 2023&ndash;2025, the same standard production converts into your league's
+points at rates that differ by up to <b>45%</b> between quarterbacks.</p>
+<div class="scroll"><table class="tbl" id="qbTbl"></table></div>
+<div class="call">
+  <span class="eyebrow">The call</span>
+  <p><b>Joe Burrow, in round 3</b> — and the simulation is emphatic. Across 700 drafts he is
+  the round-3 pick <b>57&ndash;73%</b> of the time from slots 6&ndash;12. He is the second-most
+  valuable quarterback in your scoring but goes about 19 picks later than Josh Allen, because
+  the market prices standard scoring, where his accuracy earns nothing extra.</p>
+  <p>Picking 1st, Josh Allen is the round-3 pick instead. Further down the board the same
+  logic gives you <b>Brock Purdy</b> and <b>Dak Prescott</b> around rounds 8&ndash;9.</p>
+</div>
+
+<h2>What the model actually drafts</h2>
+<p>700 simulated drafts per slot against eleven opponents following consensus rankings.
+This is the shape from the middle and back of the round; picking 1st, round&nbsp;1 is
+Ja'Marr Chase instead.</p>
+<div class="scroll"><table class="tbl" id="rndTbl"></table></div>
+<p>Receivers come late on purpose. Wide receiver is the deepest position in this format —
+40 of them start — so the 30th-best receiver is still nearly a starter, while the running
+back board falls off a cliff after about sixteen names.</p>
+
+<h2>Does any of this beat just following the rankings?</h2>
+<p>Yes, and by a wide margin. Championship probability over 8,400 simulated seasons per
+strategy. If all twelve teams were equal, every one would win 8.3% of the time.</p>
+<figure>
+  <div class="figtitle">Titles won, by strategy</div>
+  <div class="figsub">8,400 simulated seasons each · dashed line = an equal team</div>
+  <div id="c3"></div>
+</figure>
+
+<h2>Rules for draft day</h2>
+<div class="rule"><span class="rulenum">1</span><div>
+  <h3>Rounds 1&ndash;2: best running back or receiver. Full stop.</h3>
+  <p>This is where the curve is steepest and where your season is decided.</p></div></div>
+<div class="rule"><span class="rulenum">2</span><div>
+  <h3>Kicker and defense in the last two rounds only.</h3>
+  <p>The gap between the best defense and a free one is about 50 points across a whole
+  season — less than one good starter gains you in a month.</p></div></div>
+<div class="rule"><span class="rulenum">3</span><div>
+  <h3>Watch tiers, not ranks.</h3>
+  <p>The 4th and 5th best running back are indistinguishable. The gap between the last
+  player in a tier and the first in the next one is real. When a tier is down to its last
+  one or two and your next pick is 20 slots away, that is the moment to reach.</p></div></div>
+<div class="rule"><span class="rulenum">4</span><div>
+  <h3>At the turn, take the scarcer position first.</h3>
+  <p>Picking back-to-back, you effectively get both players. Take the one less likely
+  to survive the round.</p></div></div>
+<div class="rule"><span class="rulenum">5</span><div>
+  <h3>Depth is worth more than it looks.</h3>
+  <p>With five bench spots and two FLEX slots, injuries and byes hit hard. Simulating the
+  season, valuing bench depth properly beat ignoring it by a wide margin. Week 11 alone
+  holds the byes of 10 of the top 60 players.</p></div></div>
+<div class="rule"><span class="rulenum">6</span><div>
+  <h3>Trey McBride is the one tight end worth an early pick.</h3>
+  <p>He projects 280 points against a tight end replacement level of 158. The next tier
+  sits near 185&ndash;205. After him, tight end is a position to fill late.</p></div></div>
+
+<h2>How much of this should you trust?</h2>
+<p id="honest"></p>
+<p>The projections take <b>volume and role from the market</b> — hundreds of analysts with
+camp reports and depth charts beat anything I can build from box scores, and an earlier
+version that projected volume from player history badly underrated second-year players
+whose roles were changing. What the model adds is the part the market does not price:
+converting each player's own statistical profile into <em>your</em> scoring rules.</p>
+<p>Two honest caveats. Simulated win rates against consensus-following opponents are
+flattered, because the model's own projections define truth inside the simulation. And
+because volume comes from consensus, this board will be wrong wherever the consensus is
+wrong.</p>
+
+<a class="cta" href="#" id="toolLink">Open the live draft board &rarr;</a>
+
+<div class="foot">
+  Built from nflverse play-by-play and weekly stats (2021&ndash;2025) and the FantasyPros
+  redraft consensus mirrored by DynastyProcess, scraped 4 September 2026. Scoring engine
+  hand-validated against a full stat line to 0.0000 points. Draft and season simulation
+  in JAX: 12-team snake drafts against consensus-following opponents, then weekly optimal
+  lineups, a 14-week schedule and a playoff bracket, scored on championship probability.
+</div>
+</div>
+
+<script>window.__PLAN__={"curves":{"QB":[402,394,390,381,347,341,336,334,333,322,319,318,303,300,300,299,286,283,282,264,263,261,247,236,229,226,225,222,220,220,211,206,196,196,189,183,182,173,173,171,168,163],"RB":[388,362,350,348,323,306,302,292,284,282,276,276,268,267,263,253,253,249,245,240,238,238,227,226,225,222,220,217,213,205,199,198,194,194,189,188,186,183,182,179,176,174],"WR":[403,368,345,326,316,307,290,288,281,273,273,266,263,261,259,253,250,248,244,243,243,242,239,236,235,233,227,225,223,223,219,218,217,217,213,206,203,203,198,197,197,195],"TE":[280,228,216,207,195,190,181,180,179,169,165,161,158,151,146,142,139,137,136,135,131,129,126,125,121,120,116,113,112,109,106,103,103,101,100,96,92,90,89,88,86,83]},"replacement":{"QB":303,"RB":194,"WR":197,"TE":158},"cliff":[{"pick":1,"vorp":206.2,"pos":"WR","name":"Ja'Marr Chase"},{"pick":2,"vorp":193.7,"pos":"RB","name":"Jahmyr Gibbs"},{"pick":3,"vorp":170.5,"pos":"WR","name":"Puka Nacua"},{"pick":4,"vorp":167.5,"pos":"RB","name":"Bijan Robinson"},{"pick":5,"vorp":155.5,"pos":"RB","name":"Jonathan Taylor"},{"pick":6,"vorp":153.7,"pos":"RB","name":"Christian McCaffrey"},{"pick":7,"vorp":147.8,"pos":"WR","name":"Jaxon Smith-Njigba"},{"pick":8,"vorp":128.8,"pos":"RB","name":"James Cook III"},{"pick":9,"vorp":128.8,"pos":"WR","name":"Amon-Ra St. Brown"},{"pick":10,"vorp":122.2,"pos":"TE","name":"Trey McBride"},{"pick":11,"vorp":119.2,"pos":"WR","name":"CeeDee Lamb"},{"pick":12,"vorp":111.6,"pos":"RB","name":"Chase Brown"},{"pick":13,"vorp":109.7,"pos":"WR","name":"Justin Jefferson"},{"pick":14,"vorp":107.9,"pos":"RB","name":"Saquon Barkley"},{"pick":15,"vorp":99.0,"pos":"QB","name":"Josh Allen"},{"pick":16,"vorp":97.9,"pos":"RB","name":"De'Von Achane"},{"pick":17,"vorp":92.5,"pos":"WR","name":"Drake London"},{"pick":18,"vorp":90.6,"pos":"WR","name":"A.J. Brown"},{"pick":19,"vorp":90.5,"pos":"QB","name":"Joe Burrow"},{"pick":20,"vorp":89.8,"pos":"RB","name":"Derrick Henry"},{"pick":21,"vorp":88.2,"pos":"RB","name":"Kenneth Walker III"},{"pick":22,"vorp":86.7,"pos":"QB","name":"Lamar Jackson"},{"pick":23,"vorp":83.8,"pos":"WR","name":"Nico Collins"},{"pick":24,"vorp":81.7,"pos":"RB","name":"Omarion Hampton"},{"pick":25,"vorp":81.5,"pos":"RB","name":"Ashton Jeanty"},{"pick":26,"vorp":77.8,"pos":"QB","name":"Drake Maye"},{"pick":27,"vorp":75.9,"pos":"WR","name":"George Pickens"},{"pick":28,"vorp":75.7,"pos":"WR","name":"Chris Olave"},{"pick":29,"vorp":74.0,"pos":"RB","name":"Breece Hall"},{"pick":30,"vorp":72.7,"pos":"RB","name":"Kyren Williams"},{"pick":31,"vorp":70.1,"pos":"TE","name":"Brock Bowers"},{"pick":32,"vorp":69.1,"pos":"WR","name":"DeVonta Smith"},{"pick":33,"vorp":68.4,"pos":"RB","name":"Jeremiyah Love"},{"pick":34,"vorp":66.4,"pos":"DST","name":"Houston Texans"},{"pick":35,"vorp":66.1,"pos":"WR","name":"Malik Nabers"},{"pick":36,"vorp":63.9,"pos":"WR","name":"Zay Flowers"},{"pick":37,"vorp":62.3,"pos":"WR","name":"Rashee Rice"},{"pick":38,"vorp":59.1,"pos":"RB","name":"Javonte Williams"},{"pick":39,"vorp":58.6,"pos":"RB","name":"Travis Etienne Jr."},{"pick":40,"vorp":57.8,"pos":"TE","name":"Colston Loveland"},{"pick":41,"vorp":56.5,"pos":"DST","name":"Denver Broncos"},{"pick":42,"vorp":56.2,"pos":"WR","name":"Garrett Wilson"},{"pick":43,"vorp":54.6,"pos":"RB","name":"D'Andre Swift"},{"pick":44,"vorp":52.9,"pos":"WR","name":"Ladd McConkey"},{"pick":45,"vorp":51.1,"pos":"RB","name":"Bucky Irving"},{"pick":46,"vorp":51.0,"pos":"K","name":"Brandon Aubrey"},{"pick":47,"vorp":51.0,"pos":"WR","name":"Jaylen Waddle"},{"pick":48,"vorp":49.1,"pos":"TE","name":"Tyler Warren"},{"pick":49,"vorp":47.1,"pos":"WR","name":"Tetairoa McMillan"},{"pick":50,"vorp":46.1,"pos":"WR","name":"Tee Higgins"},{"pick":51,"vorp":46.0,"pos":"RB","name":"David Montgomery"},{"pick":52,"vorp":45.8,"pos":"WR","name":"Emeka Egbuka"},{"pick":53,"vorp":44.5,"pos":"WR","name":"Luther Burden III"},{"pick":54,"vorp":44.2,"pos":"RB","name":"Cam Skattebo"},{"pick":55,"vorp":43.9,"pos":"RB","name":"Quinshon Judkins"},{"pick":56,"vorp":43.5,"pos":"QB","name":"Jayden Daniels"},{"pick":57,"vorp":43.3,"pos":"DST","name":"Los Angeles Rams"},{"pick":58,"vorp":42.3,"pos":"WR","name":"Terry McLaurin"},{"pick":59,"vorp":42.0,"pos":"K","name":"Ka'imi Fairbairn"},{"pick":60,"vorp":38.6,"pos":"WR","name":"Jameson Williams"},{"pick":61,"vorp":37.6,"pos":"QB","name":"Dak Prescott"},{"pick":62,"vorp":37.4,"pos":"WR","name":"Davante Adams"},{"pick":63,"vorp":37.4,"pos":"TE","name":"Harold Fannin Jr."},{"pick":64,"vorp":36.8,"pos":"DST","name":"Seattle Seahawks"},{"pick":65,"vorp":35.7,"pos":"WR","name":"DJ Moore"},{"pick":66,"vorp":33.7,"pos":"K","name":"Cameron Dicker"},{"pick":67,"vorp":33.1,"pos":"QB","name":"Justin Herbert"},{"pick":68,"vorp":32.7,"pos":"RB","name":"Jadarian Price"},{"pick":69,"vorp":32.3,"pos":"DST","name":"Philadelphia Eagles"},{"pick":70,"vorp":32.2,"pos":"RB","name":"Bhayshul Tuten"},{"pick":71,"vorp":32.0,"pos":"TE","name":"Tucker Kraft"},{"pick":72,"vorp":31.2,"pos":"RB","name":"TreVeyon Henderson"},{"pick":73,"vorp":30.5,"pos":"QB","name":"Jalen Hurts"},{"pick":74,"vorp":29.9,"pos":"WR","name":"Christian Watson"},{"pick":75,"vorp":29.6,"pos":"QB","name":"Brock Purdy"},{"pick":76,"vorp":28.2,"pos":"DST","name":"Minnesota Vikings"},{"pick":77,"vorp":27.9,"pos":"WR","name":"Rome Odunze"},{"pick":78,"vorp":27.4,"pos":"RB","name":"Tony Pollard"},{"pick":79,"vorp":25.5,"pos":"RB","name":"Rhamondre Stevenson"},{"pick":80,"vorp":25.5,"pos":"WR","name":"Parker Washington"},{"pick":81,"vorp":25.4,"pos":"WR","name":"Mike Evans"},{"pick":82,"vorp":24.7,"pos":"K","name":"Cam Little"},{"pick":83,"vorp":23.2,"pos":"RB","name":"Jaylen Warren"},{"pick":84,"vorp":23.0,"pos":"DST","name":"Pittsburgh Steelers"},{"pick":85,"vorp":22.9,"pos":"TE","name":"Kyle Pitts Sr."},{"pick":86,"vorp":22.7,"pos":"TE","name":"George Kittle"},{"pick":87,"vorp":21.8,"pos":"TE","name":"Sam LaPorta"},{"pick":88,"vorp":21.7,"pos":"K","name":"Jason Myers"},{"pick":89,"vorp":21.6,"pos":"WR","name":"Chris Godwin Jr."},{"pick":90,"vorp":21.2,"pos":"WR","name":"Carnell Tate"},{"pick":91,"vorp":20.5,"pos":"DST","name":"New England Patriots"},{"pick":92,"vorp":20.2,"pos":"WR","name":"DK Metcalf"},{"pick":93,"vorp":20.0,"pos":"WR","name":"Marvin Harrison Jr."},{"pick":94,"vorp":19.7,"pos":"K","name":"Eddy Pineiro"},{"pick":95,"vorp":19.2,"pos":"RB","name":"Rico Dowdle"},{"pick":96,"vorp":18.7,"pos":"QB","name":"Caleb Williams"},{"pick":97,"vorp":17.0,"pos":"K","name":"Tyler Loop"},{"pick":98,"vorp":16.3,"pos":"QB","name":"Jared Goff"},{"pick":99,"vorp":15.9,"pos":"DST","name":"Jacksonville Jaguars"},{"pick":100,"vorp":15.4,"pos":"WR","name":"Brian Thomas Jr."},{"pick":101,"vorp":15.0,"pos":"QB","name":"Trevor Lawrence"},{"pick":102,"vorp":14.3,"pos":"K","name":"Evan McPherson"},{"pick":103,"vorp":13.3,"pos":"DST","name":"Los Angeles Chargers"},{"pick":104,"vorp":11.8,"pos":"TE","name":"Travis Kelce"},{"pick":105,"vorp":10.8,"pos":"RB","name":"Jonathon Brooks"},{"pick":106,"vorp":8.5,"pos":"WR","name":"Michael Pittman Jr."},{"pick":107,"vorp":7.8,"pos":"DST","name":"Baltimore Ravens"},{"pick":108,"vorp":7.4,"pos":"TE","name":"Dalton Kincaid"},{"pick":109,"vorp":6.3,"pos":"K","name":"Cairo Santos"},{"pick":110,"vorp":6.0,"pos":"WR","name":"Wan'Dale Robinson"},{"pick":111,"vorp":5.9,"pos":"WR","name":"Courtland Sutton"},{"pick":112,"vorp":5.2,"pos":"RB","name":"RJ Harvey"},{"pick":113,"vorp":5.1,"pos":"DST","name":"Green Bay Packers"},{"pick":114,"vorp":4.7,"pos":"K","name":"Jake Bates"},{"pick":115,"vorp":3.5,"pos":"RB","name":"Chuba Hubbard"},{"pick":116,"vorp":3.3,"pos":"K","name":"Andy Borregales"},{"pick":117,"vorp":2.9,"pos":"TE","name":"Isaiah Likely"},{"pick":118,"vorp":0.8,"pos":"WR","name":"Josh Downs"},{"pick":119,"vorp":0.3,"pos":"K","name":"Chase McLaughlin"},{"pick":120,"vorp":0.3,"pos":"WR","name":"Michael Wilson"},{"pick":121,"vorp":0.0,"pos":"K","name":"Harrison Mevis"},{"pick":122,"vorp":0.0,"pos":"RB","name":"Kenny Gainwell"},{"pick":123,"vorp":0.0,"pos":"DST","name":"Kansas City Chiefs"},{"pick":124,"vorp":0.0,"pos":"TE","name":"Dallas Goedert"},{"pick":125,"vorp":0.0,"pos":"WR","name":"Stefon Diggs"},{"pick":126,"vorp":0.0,"pos":"QB","name":"Jaxson Dart"},{"pick":127,"vorp":-0.3,"pos":"RB","name":"J.K. Dobbins"},{"pick":128,"vorp":-2.4,"pos":"WR","name":"Alec Pierce"},{"pick":129,"vorp":-2.7,"pos":"QB","name":"Matthew Stafford"},{"pick":130,"vorp":-2.7,"pos":"DST","name":"Detroit Lions"},{"pick":131,"vorp":-3.0,"pos":"K","name":"Harrison Butker"},{"pick":132,"vorp":-3.3,"pos":"QB","name":"Patrick Mahomes II"},{"pick":133,"vorp":-3.8,"pos":"QB","name":"Bo Nix"},{"pick":134,"vorp":-5.5,"pos":"RB","name":"MarShawn Lloyd"},{"pick":135,"vorp":-5.7,"pos":"K","name":"Chris Boswell"},{"pick":136,"vorp":-6.4,"pos":"RB","name":"Blake Corum"},{"pick":137,"vorp":-6.9,"pos":"WR","name":"Quentin Johnston"},{"pick":138,"vorp":-7.0,"pos":"TE","name":"Jake Ferguson"},{"pick":139,"vorp":-7.3,"pos":"K","name":"Will Reichard"},{"pick":140,"vorp":-7.9,"pos":"DST","name":"Cleveland Browns"},{"pick":141,"vorp":-8.1,"pos":"RB","name":"Jordan Mason"},{"pick":142,"vorp":-9.0,"pos":"K","name":"Wil Lutz"},{"pick":143,"vorp":-9.6,"pos":"DST","name":"Buffalo Bills"},{"pick":144,"vorp":-10.0,"pos":"K","name":"Daniel Carlson"},{"pick":145,"vorp":-10.4,"pos":"WR","name":"Jayden Reed"},{"pick":146,"vorp":-11.3,"pos":"K","name":"Nick Folk"},{"pick":147,"vorp":-11.5,"pos":"RB","name":"Rachaad White"},{"pick":148,"vorp":-11.6,"pos":"TE","name":"Juwan Johnson"},{"pick":149,"vorp":-12.4,"pos":"WR","name":"Jordan Addison"},{"pick":150,"vorp":-12.6,"pos":"RB","name":"Jacory Croskey-Merritt"}],"qb":[{"n":"Josh Allen","ecr":26,"ratio":1.17,"pts":402,"vorp":99},{"n":"Joe Burrow","ecr":45,"ratio":1.26,"pts":394,"vorp":91},{"n":"Lamar Jackson","ecr":32,"ratio":1.19,"pts":390,"vorp":87},{"n":"Drake Maye","ecr":37,"ratio":1.19,"pts":381,"vorp":78},{"n":"Jayden Daniels","ecr":57,"ratio":1.16,"pts":347,"vorp":44},{"n":"Dak Prescott","ecr":78,"ratio":1.23,"pts":341,"vorp":38},{"n":"Justin Herbert","ecr":72,"ratio":1.18,"pts":336,"vorp":33},{"n":"Jalen Hurts","ecr":57,"ratio":1.15,"pts":334,"vorp":30},{"n":"Brock Purdy","ecr":96,"ratio":1.21,"pts":333,"vorp":30}],"top":[{"n":"Ja'Marr Chase","p":"WR","tm":"CIN","ecr":1.5,"pts":403,"vorp":206},{"n":"Jahmyr Gibbs","p":"RB","tm":"DET","ecr":2.4,"pts":388,"vorp":194},{"n":"Puka Nacua","p":"WR","tm":"LAR","ecr":3.4,"pts":368,"vorp":170},{"n":"Bijan Robinson","p":"RB","tm":"ATL","ecr":4.2,"pts":362,"vorp":167},{"n":"Jonathan Taylor","p":"RB","tm":"IND","ecr":11.8,"pts":350,"vorp":155},{"n":"Christian McCaffrey","p":"RB","tm":"SF","ecr":9.6,"pts":348,"vorp":154},{"n":"Jaxon Smith-Njigba","p":"WR","tm":"SEA","ecr":4.6,"pts":345,"vorp":148},{"n":"James Cook III","p":"RB","tm":"BUF","ecr":15.0,"pts":323,"vorp":129},{"n":"Amon-Ra St. Brown","p":"WR","tm":"DET","ecr":5.4,"pts":326,"vorp":129},{"n":"Trey McBride","p":"TE","tm":"ARI","ecr":18.5,"pts":280,"vorp":122},{"n":"CeeDee Lamb","p":"WR","tm":"DAL","ecr":9.0,"pts":316,"vorp":119},{"n":"Chase Brown","p":"RB","tm":"CIN","ecr":17.1,"pts":306,"vorp":112},{"n":"Justin Jefferson","p":"WR","tm":"MIN","ecr":9.2,"pts":307,"vorp":110},{"n":"Saquon Barkley","p":"RB","tm":"PHI","ecr":23.6,"pts":302,"vorp":108},{"n":"Josh Allen","p":"QB","tm":"BUF","ecr":25.8,"pts":402,"vorp":99},{"n":"De'Von Achane","p":"RB","tm":"MIA","ecr":21.5,"pts":292,"vorp":98}],"policies":[{"n":"Value + opportunity cost","v":19.1,"key":"MLV_VONA"},{"n":"Marginal lineup value","v":18.8,"key":"MLV"},{"n":"Best value available","v":17.8,"key":"BPA"},{"n":"Force RB early","v":17.5,"key":"ROBUST_RB"},{"n":"One RB, then receivers","v":16.4,"key":"HERO_RB"},{"n":"Follow consensus rankings","v":15.0,"key":"ECR"},{"n":"Zero-RB","v":14.1,"key":"ZERO_RB"}],"rounds":[{"r":1,"pos":"RB","share":87,"names":"Jonathan Taylor, Bijan Robinson, Puka Nacua"},{"r":2,"pos":"RB","share":61,"names":"Trey McBride, James Cook III, Saquon Barkley"},{"r":3,"pos":"QB","share":71,"names":"Joe Burrow, Saquon Barkley, Derrick Henry"},{"r":4,"pos":"RB","share":79,"names":"Derrick Henry, Breece Hall, Kyren Williams"},{"r":5,"pos":"RB","share":65,"names":"D'Andre Swift, Tyler Warren, Bucky Irving"},{"r":6,"pos":"RB","share":48,"names":"Harold Fannin Jr., David Montgomery, Jameson Williams"},{"r":7,"pos":"WR","share":65,"names":"Chris Godwin Jr., DK Metcalf, Tony Pollard"},{"r":8,"pos":"WR","share":68,"names":"Brian Thomas Jr., DK Metcalf, Michael Pittman Jr."},{"r":9,"pos":"TE","share":51,"names":"Jared Goff, George Kittle, Brock Purdy"},{"r":10,"pos":"TE","share":68,"names":"Dalton Kincaid, Isaiah Likely, Travis Kelce"}],"honest":"Across 8,400 simulated seasons per strategy, drafting on this model won the league 19.1% of the time against eleven opponents who follow consensus rankings \u2014 versus 15.0% for following consensus yourself, and 8.3% if all twelve teams were equal. That gap is 7.1 standard errors wide, so it is a real effect rather than simulation noise. Take the absolute number with salt, though: the model's own projections define what \"true\" means inside the simulation, so any strategy optimising against them is flattered.","toolUrl":"https://claude.ai/code/artifact/36285c62-c9f5-4f37-b2b1-6d32def47087"};</script>
+<script>
+const D = window.__PLAN__;
+const POSC = {QB:"var(--qb)", RB:"var(--rb)", WR:"var(--wr)", TE:"var(--te)"};
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a={}) => { const n=document.createElementNS(NS,t);
+  for(const k in a) n.setAttribute(k,a[k]); return n; };
+
+/* ---------------- Chart 1: value over replacement by positional rank ------- */
+function chart1(){
+  const W=760, H=340, mL=46, mR=52, mT=14, mB=34, N=36;
+  const series = ["RB","WR","QB","TE"].map(pos=>({
+    pos, pts: D.curves[pos].slice(0,N).map((v,i)=>({x:i+1, y:v - D.replacement[pos]}))
+  }));
+  const ymax = 210, ymin = -60;
+  const X = r => mL + (r-1)/(N-1) * (W-mL-mR);
+  const Y = v => mT + (ymax-v)/(ymax-ymin) * (H-mT-mB);
+  const svg = el("svg",{viewBox:`0 0 ${W} ${H}`, width:"100%",
+    role:"img","aria-label":"Value over replacement by rank within each position"});
+
+  // grid + y axis
+  for(const v of [200,150,100,50,0,-50]){
+    svg.appendChild(el("line",{x1:mL,x2:W-mR,y1:Y(v),y2:Y(v),
+      stroke: v===0?"var(--line-2)":"var(--grid)","stroke-width":v===0?1.5:1}));
+    const t=el("text",{x:mL-8,y:Y(v)+4,"text-anchor":"end","font-size":11,
+      fill:"var(--ink-3)"}); t.textContent = v>0?"+"+v:v; svg.appendChild(t);
+  }
+  // x axis
+  for(const r of [1,6,12,18,24,30,36]){
+    const t=el("text",{x:X(r),y:H-12,"text-anchor":"middle","font-size":11,
+      fill:"var(--ink-3)"}); t.textContent=r; svg.appendChild(t);
+  }
+  const xl=el("text",{x:(mL+W-mR)/2,y:H-0.5,"text-anchor":"middle","font-size":11,
+    fill:"var(--ink-3)"}); xl.textContent="rank within position"; svg.appendChild(xl);
+
+  series.forEach(s=>{
+    const d = s.pts.map((p,i)=>`${i?"L":"M"}${X(p.x).toFixed(1)},${Y(p.y).toFixed(1)}`).join("");
+    svg.appendChild(el("path",{d, fill:"none", stroke:POSC[s.pos], "stroke-width":2.4,
+      "stroke-linejoin":"round","stroke-linecap":"round"}));
+    const last=s.pts[s.pts.length-1];
+    const lb=el("text",{x:X(last.x)+8, y:Y(last.y)+4, "font-size":12.5,
+      "font-weight":600, fill:POSC[s.pos]}); lb.textContent=s.pos; svg.appendChild(lb);
+  });
+
+  // hover
+  const hov=el("line",{x1:0,x2:0,y1:mT,y2:H-mB,stroke:"var(--ink-3)",
+    "stroke-width":1,"stroke-dasharray":"3 3",opacity:0});
+  svg.appendChild(hov);
+  const dots=["RB","WR","QB","TE"].map(pos=>{
+    const c=el("circle",{r:4.5,fill:POSC[pos],stroke:"var(--surface)","stroke-width":2,opacity:0});
+    svg.appendChild(c); return {pos,c};
+  });
+  const tip=document.getElementById("t1");
+  const box=el("rect",{x:mL,y:mT,width:W-mL-mR,height:H-mT-mB,fill:"transparent"});
+  svg.appendChild(box);
+  const host=document.getElementById("c1"); host.appendChild(svg);
+  svg.addEventListener("pointermove", ev=>{
+    const bb=svg.getBoundingClientRect(), sx=(ev.clientX-bb.left)/bb.width*W;
+    if(sx<mL||sx>W-mR){ hov.setAttribute("opacity",0); dots.forEach(d=>d.c.setAttribute("opacity",0));
+      tip.style.opacity=0; return; }
+    const r=Math.max(1,Math.min(N,Math.round((sx-mL)/(W-mL-mR)*(N-1)+1)));
+    hov.setAttribute("x1",X(r)); hov.setAttribute("x2",X(r)); hov.setAttribute("opacity",1);
+    let rows=`rank ${r}`;
+    dots.forEach(d=>{
+      const s=series.find(q=>q.pos===d.pos), p=s.pts[r-1];
+      d.c.setAttribute("cx",X(p.x)); d.c.setAttribute("cy",Y(p.y)); d.c.setAttribute("opacity",1);
+      rows+=`\n${d.pos} ${p.y>0?"+":""}${Math.round(p.y)}`;
+    });
+    tip.textContent=rows; tip.style.opacity=1;
+    tip.style.left=Math.min(ev.clientX-bb.left+14, bb.width-110)+"px";
+    tip.style.top=Math.max(4, ev.clientY-bb.top-70)+"px";
+    tip.style.whiteSpace="pre";
+  });
+  svg.addEventListener("pointerleave",()=>{ hov.setAttribute("opacity",0);
+    dots.forEach(d=>d.c.setAttribute("opacity",0)); tip.style.opacity=0; });
+
+  const lg=document.getElementById("lg1");
+  ["RB","WR","QB","TE"].forEach(p=>{
+    const d=document.createElement("span"); d.className="lg";
+    d.innerHTML=`<span class="sw" style="background:${POSC[p]}"></span>${p}`;
+    lg.appendChild(d);
+  });
+}
+
+/* ---------------- Chart 2: the value cliff -------------------------------- */
+function chart2(){
+  const W=760, H=270, mL=46, mR=18, mT=14, mB=38;
+  const pts=D.cliff, N=pts.length;
+  const ymax=215;
+  const X=i=>mL+(i)/(N-1)*(W-mL-mR);
+  const Y=v=>mT+(ymax-v)/ymax*(H-mT-mB);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img",
+    "aria-label":"Value of the best available player by overall pick"});
+  for(const v of [200,150,100,50,0]){
+    svg.appendChild(el("line",{x1:mL,x2:W-mR,y1:Y(v),y2:Y(v),
+      stroke:v===0?"var(--line-2)":"var(--grid)","stroke-width":v===0?1.5:1}));
+    const t=el("text",{x:mL-8,y:Y(v)+4,"text-anchor":"end","font-size":11,fill:"var(--ink-3)"});
+    t.textContent=v>0?"+"+v:"0"; svg.appendChild(t);
+  }
+  // round boundaries
+  for(let r=1;r<=12;r++){
+    const i=r*12-1; if(i>=N) break;
+    svg.appendChild(el("line",{x1:X(i),x2:X(i),y1:mT,y2:H-mB,stroke:"var(--grid)","stroke-width":1}));
+  }
+  for(const r of [1,3,5,7,9,11]){
+    const t=el("text",{x:X(r*12-6.5),y:H-16,"text-anchor":"middle","font-size":11,
+      fill:"var(--ink-3)"}); t.textContent="R"+r; svg.appendChild(t);
+  }
+  const xl=el("text",{x:(mL+W-mR)/2,y:H-2,"text-anchor":"middle","font-size":11,
+    fill:"var(--ink-3)"}); xl.textContent="overall pick (round markers)"; svg.appendChild(xl);
+
+  const line=pts.map((p,i)=>`${i?"L":"M"}${X(i).toFixed(1)},${Y(p.vorp).toFixed(1)}`).join("");
+  svg.appendChild(el("path",{d:`${line}L${X(N-1)},${Y(0)}L${X(0)},${Y(0)}Z`,
+    fill:"var(--accent-line)",opacity:.13}));
+  svg.appendChild(el("path",{d:line,fill:"none",stroke:"var(--accent-line)","stroke-width":2.4,
+    "stroke-linejoin":"round"}));
+
+  const dot=el("circle",{r:5,fill:"var(--accent-line)",stroke:"var(--surface)","stroke-width":2,opacity:0});
+  svg.appendChild(dot);
+  const tip=document.getElementById("t2");
+  document.getElementById("c2").appendChild(svg);
+  svg.addEventListener("pointermove",ev=>{
+    const bb=svg.getBoundingClientRect(), sx=(ev.clientX-bb.left)/bb.width*W;
+    if(sx<mL||sx>W-mR){ dot.setAttribute("opacity",0); tip.style.opacity=0; return; }
+    const i=Math.max(0,Math.min(N-1,Math.round((sx-mL)/(W-mL-mR)*(N-1))));
+    const p=pts[i];
+    dot.setAttribute("cx",X(i)); dot.setAttribute("cy",Y(p.vorp)); dot.setAttribute("opacity",1);
+    tip.textContent=`pick ${p.pick} · ${p.name}\n${p.pos} · +${p.vorp}`;
+    tip.style.whiteSpace="pre"; tip.style.opacity=1;
+    tip.style.left=Math.min(ev.clientX-bb.left+14, bb.width-160)+"px";
+    tip.style.top=Math.max(4, ev.clientY-bb.top-52)+"px";
+  });
+  svg.addEventListener("pointerleave",()=>{dot.setAttribute("opacity",0); tip.style.opacity=0;});
+}
+
+/* ---------------- tables --------------------------------------------------- */
+function tables(){
+  const t=document.getElementById("topTbl");
+  t.innerHTML=`<thead><tr><th class="n">#</th><th>Player</th><th>Pos</th><th>Team</th>
+    <th class="n">Consensus</th><th class="n">Proj</th><th class="n">Value</th></tr></thead>`;
+  const tb=document.createElement("tbody");
+  D.top.forEach((p,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td class="n">${i+1}</td><td>${p.n}</td>
+      <td><span class="tag ${p.p}">${p.p}</span></td><td>${p.tm}</td>
+      <td class="n">${p.ecr}</td><td class="n">${p.pts}</td><td class="n"><b>+${p.vorp}</b></td>`;
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+
+  const q=document.getElementById("qbTbl");
+  q.innerHTML=`<thead><tr><th>Quarterback</th><th class="n">Consensus rank</th>
+    <th class="n">Conversion</th><th class="n">Projected</th><th class="n">Value</th></tr></thead>`;
+  const qb=document.createElement("tbody");
+  D.qb.forEach(p=>{
+    const tr=document.createElement("tr");
+    if(p.n.indexOf("Burrow")>=0) tr.className="hi";
+    tr.innerHTML=`<td>${p.n}</td><td class="n">${p.ecr}</td>
+      <td class="n">${p.ratio.toFixed(2)}&times;</td><td class="n">${p.pts}</td>
+      <td class="n"><b>+${p.vorp}</b></td>`;
+    qb.appendChild(tr);
+  });
+  q.appendChild(qb);
+}
+
+/* ---------------- Chart 3: strategy comparison ---------------------------- */
+function chart3(){
+  const rows=D.policies, W=760, rowH=34, mL=212, mR=58, mT=8;
+  const H=mT+rows.length*rowH+30, max=22;
+  const X=v=>mL+v/max*(W-mL-mR);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img",
+    "aria-label":"Championship probability by drafting strategy"});
+  for(const v of [0,5,10,15,20]){
+    svg.appendChild(el("line",{x1:X(v),x2:X(v),y1:mT,y2:mT+rows.length*rowH,
+      stroke:"var(--grid)","stroke-width":1}));
+    const t2=el("text",{x:X(v),y:H-10,"text-anchor":"middle","font-size":11,
+      fill:"var(--ink-3)"}); t2.textContent=v+"%"; svg.appendChild(t2);
+  }
+  const bl=el("line",{x1:X(8.3),x2:X(8.3),y1:mT,y2:mT+rows.length*rowH,
+    stroke:"var(--ink-3)","stroke-width":1.5,"stroke-dasharray":"4 3"});
+  svg.appendChild(bl);
+  rows.forEach((r,i)=>{
+    const y=mT+i*rowH+rowH/2;
+    const lb=el("text",{x:mL-12,y:y+4,"text-anchor":"end","font-size":13,
+      fill:"var(--ink-2)","font-weight":i===0?600:400});
+    lb.textContent=r.n; svg.appendChild(lb);
+    const w=X(r.v)-X(0);
+    const bar=el("rect",{x:X(0),y:y-9,width:Math.max(w,1),height:18,rx:4,
+      fill:i===0?"var(--accent-line)":(r.key==="ECR"||r.key==="ZERO_RB"?"var(--te)":"var(--ink-3)"),
+      opacity:i===0?1:.72});
+    svg.appendChild(bar);
+    const vl=el("text",{x:X(r.v)+8,y:y+4,"font-size":12.5,fill:"var(--ink-2)",
+      "font-weight":600}); vl.textContent=r.v.toFixed(1)+"%"; svg.appendChild(vl);
+  });
+  document.getElementById("c3").appendChild(svg);
+}
+
+function roundTable(){
+  const t=document.getElementById("rndTbl");
+  t.innerHTML=`<thead><tr><th class="n">Round</th><th>Take</th>
+    <th class="n">How often</th><th>Most-taken players</th></tr></thead>`;
+  const tb=document.createElement("tbody");
+  D.rounds.forEach(r=>{
+    const tr=document.createElement("tr");
+    if(r.r===3) tr.className="hi";
+    tr.innerHTML=`<td class="n">${r.r}</td>
+      <td><span class="tag ${r.pos}">${r.pos}</span></td>
+      <td class="n">${r.share}%</td><td>${r.names}</td>`;
+    tb.appendChild(tr);
+  });
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td class="n">14–15</td><td><span class="tag K" style="background:var(--ink-3)">K</span>
+    <span class="tag DST" style="background:var(--ink-3)">DEF</span></td>
+    <td class="n">—</td><td>anyone; never earlier</td>`;
+  tb.appendChild(tr);
+  t.appendChild(tb);
+}
+
+chart1(); chart2(); chart3(); tables(); roundTable();
+document.getElementById("honest").textContent = D.honest;
+document.getElementById("toolLink").href = D.toolUrl;
+
+</script>

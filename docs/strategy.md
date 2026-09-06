@@ -22,7 +22,7 @@ That baseline is called **replacement level**, and in this league it is:
 |---|---|---|
 | QB | **303 pts** | 12 teams start 1 QB, so QB13 is free. The bar is very high. |
 | RB | 194 pts | 32 RBs start once FLEX spots are filled |
-| WR | 197 pts | 40 WRs start |
+| WR | 197 pts | 40 WRs start - the deepest position |
 | TE | 158 pts | only 12 start |
 | K | 137 pts | any of them |
 | DEF | 114 pts | any of them |
@@ -67,6 +67,47 @@ Two conclusions. Your **first three picks are most of your season**. And from
 round 11 on, everyone left is essentially replacement level - those picks are
 insurance and lottery tickets, so that's where K and DEF belong.
 
+## What the simulation actually drafts
+
+700 simulated drafts per slot, against 11 opponents following consensus rankings.
+The modal pick by round, which barely changes across draft slots:
+
+| Round | Pick | Typical name |
+|---|---|---|
+| 1 | **RB** (81-97%) | Jonathan Taylor, Bijan Robinson, Ja'Marr Chase at slot 1 |
+| 2 | **RB or Trey McBride** (RB 55-60 / TE 38-39) | James Cook III, Saquon Barkley, McBride |
+| 3 | **QB** (69-77%) | **Joe Burrow** (57-73%) |
+| 4 | **RB** (76-83%) | Derrick Henry, Breece Hall, Kyren Williams |
+| 5 | **RB** (64-71%) | D'Andre Swift, Bucky Irving, Tyler Warren |
+| 6 | RB / TE | Harold Fannin Jr., David Montgomery |
+| 7-8 | **WR** (63-72%) | Chris Godwin Jr., DK Metcalf, Brian Thomas Jr. |
+| 9-10 | QB2 / TE | Brock Purdy, Jared Goff, Dalton Kincaid |
+| 14-15 | K, DEF | anyone |
+
+Receivers come late on purpose. Wide receiver is the deepest position in this
+format (40 of them start), so the 30th-best receiver is still nearly a starter,
+while the running back board falls off a cliff after about 16 names.
+
+## How the strategies compare
+
+Championship probability, 8,400 simulated seasons per strategy. If all twelve
+teams were equal, everyone would win 8.3% of the time.
+
+| Strategy | Titles won |
+|---|---|
+| **Marginal lineup value + opportunity cost** | **19.1%** |
+| Marginal lineup value | 18.8% |
+| Best value available | 17.8% |
+| Force RB early | 17.5% |
+| One RB then receivers | 16.4% |
+| Follow consensus rankings | 15.0% |
+| Zero-RB (avoid RB early) | **14.1%** |
+
+Two things to take from this. Drafting on value beats following consensus
+rankings by **27% in relative terms** (7.1 standard errors - not noise). And
+**Zero-RB is the worst strategy tested** - in a league with two FLEX spots,
+avoiding running backs early is actively harmful.
+
 ## Rules for draft day
 
 1. **Rounds 1-2: take the best running back or wide receiver.** Not a QB, not a
@@ -108,11 +149,14 @@ your league inflates QB scoring, and it rewards accuracy specifically.
 | Dak Prescott | 78 | 1.23 | 341 | +38 |
 | Brock Purdy | 96 | 1.21 | 333 | +30 |
 
-**Joe Burrow is the pick.** He is the second-most valuable QB in your scoring but
-goes roughly 19 picks later than Josh Allen, because the market prices standard
-scoring where his completion rate earns nothing extra. Same logic, cheaper:
-**Dak Prescott and Brock Purdy** in the late-middle rounds.
+**Joe Burrow is the pick, and the simulation is emphatic about it.** Across 700
+simulated drafts he is the round-3 selection **57-73% of the time** at slots 6-12.
+He is the second-most valuable quarterback in your scoring but goes about 19 picks
+later than Josh Allen, because the market prices standard scoring, where his
+completion rate earns nothing extra.
 
-Still - even Burrow at +91 ranks below a dozen running backs and receivers. Take
-him if he falls to you around rounds 4-5. Do not spend a top-30 pick on a
-quarterback.
+If you pick 1st, Josh Allen is instead the round-3 pick (38%). Same logic further
+down: **Dak Prescott** and **Brock Purdy** are the round 8-9 versions.
+
+One correction worth stating: an earlier version of this plan said to wait until
+rounds 4-5. The simulation says round 3 - Burrow rarely survives to round 4.

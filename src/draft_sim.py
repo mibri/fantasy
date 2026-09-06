@@ -17,13 +17,18 @@ KDST_MIN_ROUND = 12
 MAXPOS = 8
 # Bench-depth weight, TUNED by championship probability rather than assumed
 # (data/processed/tuning.csv, 4 slots x 700 sims per point, SE ~0.007).
-# Championship rate is flat for weights <= 0.5 (0.189-0.194) and falls away
-# above it (0.185 at 0.80, 0.182 at 1.20). 0.25 sits mid-plateau.
+# Once the season simulation models a WAIVER WIRE, this parameter stops
+# mattering: the whole grid 0.0-1.2 scores 0.185-0.192, every point within ~1 SE.
+# That is the honest result. Any value in 0-0.5 is equivalent; 0.25 is used.
 #
-# An earlier sweep appeared to show that a very LARGE weight was optimal. That
-# was an artefact of the empty-slot threshold bug (see lineup_and_thresholds):
-# the starter term was over-scaled, and only a big depth term could balance it.
-# Fixing the threshold reversed the conclusion.
+# Two earlier sweeps pointed elsewhere, and both were artefacts:
+#   * a very LARGE weight looked optimal while the empty-slot threshold bug
+#     over-scaled the starter term (only a big depth term could balance it);
+#   * a small weight looked clearly optimal once that was fixed, but only
+#     because a manager with an injured starter still scored ZERO from that
+#     slot, which massively overstates the worth of rostering backups.
+# With free agency modelled, bench depth is close to free - as it is in a real
+# league - and the parameter washes out.
 BENCH_BASE, BENCH_DECAY = 0.25, 0.45
 MLV_ADDITIVE = True
 
@@ -75,13 +80,29 @@ def lineup_and_thresholds(rv, repl=None):
     total = (qb[:, 0] + rb[:, 0] + rb[:, 1] + wr[:, 0] + wr[:, 1] + te[:, 0]
              + f1 + f2 + k[:, 0] + dst[:, 0])
     fmin = jnp.minimum(f1, f2)
-    th = jnp.stack([qb[:, 0],
-                    jnp.minimum(jnp.minimum(rb[:, 0], rb[:, 1]), fmin),
-                    jnp.minimum(jnp.minimum(wr[:, 0], wr[:, 1]), fmin),
-                    jnp.minimum(te[:, 0], fmin),
-                    k[:, 0], dst[:, 0]], axis=1)
-    if repl is not None:
-        th = jnp.maximum(th, repl[None, :])
+    if repl is None:
+        th = jnp.stack([qb[:, 0],
+                        jnp.minimum(jnp.minimum(rb[:, 0], rb[:, 1]), fmin),
+                        jnp.minimum(jnp.minimum(wr[:, 0], wr[:, 1]), fmin),
+                        jnp.minimum(te[:, 0], fmin),
+                        k[:, 0], dst[:, 0]], axis=1)
+        return total, th
+
+    # Each slot is floored by what could replace THAT slot for free. A base slot
+    # is floored at its own position's replacement, but a FLEX slot is floored at
+    # the best replacement-level flex-eligible player - max(RB, WR, TE) - because
+    # any of the three can fill it. Flooring a tight end's flex option at the TE
+    # replacement (158) rather than the WR one (197) made tight ends look far
+    # better as flex fillers than they are, and the simulator over-drafted them.
+    flex_repl = jnp.max(repl[jnp.array([RB, WR, TE])])
+    ff = jnp.maximum(fmin, flex_repl)
+    th = jnp.stack([
+        jnp.maximum(qb[:, 0], repl[QB]),
+        jnp.minimum(jnp.maximum(jnp.minimum(rb[:, 0], rb[:, 1]), repl[RB]), ff),
+        jnp.minimum(jnp.maximum(jnp.minimum(wr[:, 0], wr[:, 1]), repl[WR]), ff),
+        jnp.minimum(jnp.maximum(te[:, 0], repl[TE]), ff),
+        jnp.maximum(k[:, 0], repl[K]),
+        jnp.maximum(dst[:, 0], repl[DST])], axis=1)
     return total, th
 
 

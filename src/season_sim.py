@@ -34,7 +34,7 @@ def round_robin(n=N_TEAMS, weeks=REG_WEEKS):
     return jnp.array(sched)
 
 
-def simulate(rosters, board_arr, key, chunk_weeks=17):
+def simulate(rosters, board_arr, key, waiver=True):
     """rosters (S,T,R) player indices -> (weekly team totals (S,T,W))."""
     S = rosters.shape[0]
     pos = board_arr["pos"][rosters]                       # (S,T,R)
@@ -61,6 +61,13 @@ def simulate(rosters, board_arr, key, chunk_weeks=17):
     scores = jnp.moveaxis(weekly, -1, 0)                  # (W,S,T,R)
     posb = jnp.broadcast_to(pos[None], scores.shape)
 
+    # Weekly points a freely available waiver-wire player would give at each slot.
+    # Without this a manager whose starter is hurt scores ZERO from that slot, which
+    # massively overstates the value of rostering backups. In a real league you pick
+    # up a replacement-level player for nothing.
+    wv = (board_arr["repl"] / 17.0) if waiver else jnp.zeros(6)
+    flex_wv = jnp.max(wv[jnp.array([RB, WR, TE])])
+
     def best_lineup(sc, ps):
         # sc,ps: (...,R) -> per-position sorted desc
         per = []
@@ -68,11 +75,13 @@ def simulate(rosters, board_arr, key, chunk_weeks=17):
             masked = jnp.where(ps == gpos, sc, -jnp.inf)
             per.append(jnp.sort(masked, axis=-1)[..., ::-1])
         qb, rb, wr, te, kk, ds = per
-        z = lambda x: jnp.where(jnp.isneginf(x), 0.0, x)
+        f = lambda x, floor: jnp.maximum(jnp.where(jnp.isneginf(x), 0.0, x), floor)
         flex = jnp.concatenate([rb[..., 2:4], wr[..., 2:4], te[..., 1:3]], axis=-1)
         flex = jnp.sort(flex, axis=-1)[..., ::-1]
-        return (z(qb[..., 0]) + z(rb[..., 0]) + z(rb[..., 1]) + z(wr[..., 0]) + z(wr[..., 1])
-                + z(te[..., 0]) + z(flex[..., 0]) + z(flex[..., 1]) + z(kk[..., 0]) + z(ds[..., 0]))
+        return (f(qb[..., 0], wv[QB]) + f(rb[..., 0], wv[RB]) + f(rb[..., 1], wv[RB])
+                + f(wr[..., 0], wv[WR]) + f(wr[..., 1], wv[WR]) + f(te[..., 0], wv[TE])
+                + f(flex[..., 0], flex_wv) + f(flex[..., 1], flex_wv)
+                + f(kk[..., 0], wv[K]) + f(ds[..., 0], wv[DST]))
 
     totals = best_lineup(scores, posb)                    # (W,S,T)
     return jnp.moveaxis(totals, 0, -1)                    # (S,T,W)
