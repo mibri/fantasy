@@ -15,12 +15,16 @@ N_TEAMS, N_ROUNDS = 12, 15
 N_PICKS = N_TEAMS * N_ROUNDS
 KDST_MIN_ROUND = 12
 MAXPOS = 8
-# Bench-depth weight, TUNED by championship probability over a grid (see
-# data/processed/tuning.csv): additive stacking at 0.55-1.10 scored 0.346-0.348
-# versus 0.283 for the non-additive form. Depth matters more than a
-# starters-only model implies, because 5 bench spots plus injuries mean a
-# thin roster bleeds points. 0.70 sits mid-plateau.
-BENCH_BASE, BENCH_DECAY = 0.70, 0.45
+# Bench-depth weight, TUNED by championship probability rather than assumed
+# (data/processed/tuning.csv, 4 slots x 700 sims per point, SE ~0.007).
+# Championship rate is flat for weights <= 0.5 (0.189-0.194) and falls away
+# above it (0.185 at 0.80, 0.182 at 1.20). 0.25 sits mid-plateau.
+#
+# An earlier sweep appeared to show that a very LARGE weight was optimal. That
+# was an artefact of the empty-slot threshold bug (see lineup_and_thresholds):
+# the starter term was over-scaled, and only a big depth term could balance it.
+# Fixing the threshold reversed the conclusion.
+BENCH_BASE, BENCH_DECAY = 0.25, 0.45
 MLV_ADDITIVE = True
 
 
@@ -56,8 +60,15 @@ def allowed_mask(avail, pos_count, pos, rnd):
     return jnp.where(must_fill[:, None], ok & (need[:, pos] > 0), ok)
 
 
-def lineup_and_thresholds(rv):
-    """rv: (S,6,MAXPOS) sorted desc. Returns (lineup_total, threshold_by_pos)."""
+def lineup_and_thresholds(rv, repl=None):
+    """rv: (S,6,MAXPOS) sorted desc. Returns (lineup_total, threshold_by_pos).
+
+    `repl` clamps every threshold to at least replacement level. Without it an
+    EMPTY slot has threshold 0, so a candidate's marginal value equals his full
+    projected points - which systematically flatters quarterbacks, who score the
+    most raw points. An empty slot can always be filled later from the waiver
+    wire, so the true alternative is a replacement-level player, never nothing.
+    """
     qb, rb, wr, te, k, dst = (rv[:, i, :] for i in range(6))
     flex = jnp.sort(jnp.concatenate([rb[:, 2:], wr[:, 2:], te[:, 1:]], axis=1), axis=1)[:, ::-1]
     f1, f2 = flex[:, 0], flex[:, 1]
@@ -69,6 +80,8 @@ def lineup_and_thresholds(rv):
                     jnp.minimum(jnp.minimum(wr[:, 0], wr[:, 1]), fmin),
                     jnp.minimum(te[:, 0], fmin),
                     k[:, 0], dst[:, 0]], axis=1)
+    if repl is not None:
+        th = jnp.maximum(th, repl[None, :])
     return total, th
 
 
@@ -141,7 +154,7 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None):
         pc_t = pos_count[:, t, :]
         rv_t = rv[:, t]                                   # (S,6,MAXPOS)
         legal = allowed_mask(avail, pc_t, pos, rnd)
-        _, th = lineup_and_thresholds(rv_t)
+        _, th = lineup_and_thresholds(rv_t, d["repl"])
 
         gap = jnp.where(rnd % 2 == 0, 2 * (N_TEAMS - 1 - my_slot) + 1, 2 * my_slot + 1)
         rank = jnp.argsort(jnp.argsort(perceived + jnp.where(avail, 0.0, 1e6), axis=1), axis=1)

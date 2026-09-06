@@ -54,8 +54,10 @@ Two rules the settings page left ambiguous, with the choice made explicit:
 - **Incompletions** = `attempts - completions`, so interceptions count as
   incompletions (the standard stat definition).
 - **Long-TD bonuses stack**: a 55-yard TD earns both the 40+ and the 50+
-  bonus, as separate stat triggers. `stack_long_td=False` flips this; the
-  effect is under 2 points per player-season either way.
+  bonus, as separate stat triggers. `stack_long_td=False` flips this. Measured
+  over 2021-2025, the choice is worth a mean of **0.18 points per
+  player-season**, exceeds 2 points in 0.4% of player-seasons (7 of 1881), and
+  never exceeds 4. It cannot change a draft decision.
 
 ## 4. Projections
 
@@ -176,14 +178,29 @@ first-round pick here despite the inflated QB scoring.**
   that only 2 RB + 2 FLEX can start. MLV fixes this and yields realistic
   4.5 RB / 3.8 WR / 2.8 TE / 1.9 QB rosters.
 
+  > **A third model error worth recording.** The threshold for an *empty* lineup
+  > slot was initially 0, which made a candidate's marginal value equal his full
+  > projected points. That systematically flattered quarterbacks, who score the
+  > most raw points in this format: the simulator drafted Josh Allen in **round 2**
+  > at nearly every slot, flatly contradicting the VORP table showing elite QB as
+  > roughly the 15th most valuable asset. An empty slot can always be filled later
+  > from the waiver wire, so the true alternative is a **replacement-level player,
+  > never nothing**. Flooring every threshold at replacement level fixed it, and
+  > QB moved back to round 3. The bug had also inflated the tuned bench weight,
+  > because a large depth term was the only thing counterbalancing an over-scaled
+  > starter term - so the weight had to be re-tuned after the fix.
+
   **The bench-depth weight was tuned, not assumed.** Sweeping it against
-  championship probability (`data/processed/tuning.csv`) showed that counting a
-  player as *either* a starter upgrade *or* bench depth - the theoretically
-  tidier form, which avoids double-counting - scored **0.283**, while stacking
-  the two terms scored **0.346-0.348** across a broad plateau of weights
-  (0.55-1.10). Depth is worth more than a starters-only model implies: with only
-  5 bench spots, byes and in-season injuries mean a thin roster bleeds points.
-  The tidier formula was the worse one, and the simulation is what settled it.
+  championship probability (`data/processed/tuning.csv`, 4 slots x 700 sims per
+  point, SE ~0.007) gives a flat optimum for weights **<= 0.5** (0.189-0.194)
+  that falls away above it (0.185 at 0.80, 0.182 at 1.20). The model uses 0.25.
+
+  This is worth recording because an earlier sweep pointed the *opposite* way,
+  appearing to show that a very large depth weight was best. That was an
+  artefact of the empty-slot threshold bug described above: with the starter
+  term over-scaled, only a large depth term could counterbalance it. Fixing the
+  bug reversed the tuning result. A tuned hyperparameter is only as trustworthy
+  as the objective underneath it.
 
 `src/season_sim.py` then plays each drafted league out: projection error, then
 gamma-distributed weekly noise matching the measured mean-SD relationship and

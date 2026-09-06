@@ -10,7 +10,7 @@ SLOTS = [0, 3, 6, 9]                     # sample of slots, averaged
 def main():
     b, arr = load_board(); sched = round_robin(); rows = []
     grid = [(add, bb) for add in (False, True)
-                      for bb in (0.0, 0.15, 0.35, 0.55, 0.80, 1.10)]
+                      for bb in (0.0, 0.15, 0.30, 0.50, 0.80, 1.20)]
     for add, bb in grid:
         cs = []
         for slot in SLOTS:
