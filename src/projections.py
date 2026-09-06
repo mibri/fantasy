@@ -29,6 +29,13 @@ from sklearn.isotonic import IsotonicRegression
 OUT = "data/processed"
 HIST_SEASONS = (2023, 2024, 2025)
 RATIO_SHRINK_GAMES = 20          # empirical-Bayes prior strength, in games
+
+# Measured persistence of the scoring-translation ratio: correlate each player's
+# ratio over 2021-23 against 2024-25. It is real signal (r = +0.53 at QB, RB and
+# WR) but regresses hard, and the regression slope is the most weight a player's
+# own ratio should ever carry. Sample-size shrinkage alone gave a 40-game player
+# ~0.67 weight, roughly 1.7x too much at QB.
+RATIO_PERSIST = {"QB": 0.398, "RB": 0.524, "WR": 0.511, "TE": 0.214}
 SEASON_W = {2025: 0.60, 2024: 0.28, 2023: 0.12}
 
 # empirically measured year-over-year predictive residual SD (points/game)
@@ -107,8 +114,11 @@ def build():
         include_groups=False)
     n = df.raw_games.fillna(0)
     prior = df.pos.map(pos_mean)
-    df["ratio"] = ((n * df.ratio_raw.fillna(0) + RATIO_SHRINK_GAMES * prior)
-                   / (n + RATIO_SHRINK_GAMES))
+    # two-stage shrinkage: sample size first, then the measured persistence slope,
+    # which caps how much of a player's own ratio can ever survive to next season
+    w_n = (n / (n + RATIO_SHRINK_GAMES)).fillna(0.0)
+    slope = df.pos.map(RATIO_PERSIST).fillna(0.4)
+    df["ratio"] = prior + slope * w_n * (df.ratio_raw.fillna(prior) - prior)
     df["ratio_prior"] = prior
 
     # ---- 3. combine ----

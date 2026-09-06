@@ -34,11 +34,16 @@ def round_robin(n=N_TEAMS, weeks=REG_WEEKS):
     return jnp.array(sched)
 
 
-def simulate(rosters, board_arr, key, waiver=True):
+def simulate(rosters, board_arr, key, waiver=True, truth_proj=None):
+    """truth_proj lets the SEASON be generated from a different set of
+    projections than the ones the draft policy used. That separation is what
+    makes an honest test possible: if our board defines both the draft and the
+    truth, any policy optimising it is flattered."""
     """rosters (S,T,R) player indices -> (weekly team totals (S,T,W))."""
     S = rosters.shape[0]
     pos = board_arr["pos"][rosters]                       # (S,T,R)
-    ppg = board_arr["proj"][rosters] / 16.0               # per-game rate
+    src = board_arr["proj"] if truth_proj is None else truth_proj
+    ppg = src[rosters] / 16.0                             # per-game rate
     sd_season = board_arr["proj_sd"][rosters] / 16.0      # projection error, per game
     avail_p = jnp.clip(board_arr["proj"][rosters] * 0 + 0.92, 0.5, 1.0)
 

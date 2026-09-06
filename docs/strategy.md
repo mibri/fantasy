@@ -121,9 +121,11 @@ avoiding running backs early is actively harmful.
    your next pick is 20 slots away, that's when to reach.
 4. **Two picks in a row (the turn) = take the scarce position first.** At the
    turn you effectively get both players, so take the one less likely to survive.
-5. **Bye weeks.** Week 11 holds 10 of the top 60 players' byes; weeks 6 and 13
-   hold 9 each. With five bench spots, don't end up with four starters idle in
-   the same week.
+5. **Your bench is replaceable.** Once the simulation models a waiver wire, the
+   weight you put on bench depth stops mattering - every setting lands within
+   noise. A hurt starter costs a waiver pickup, not a zero. Plan bye weeks
+   instead: week 11 holds 10 of the top 60 players' byes, weeks 6 and 13 nine
+   each. Don't leave four starters idle in the same week.
 
 ## The tight end decision
 

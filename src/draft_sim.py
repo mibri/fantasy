@@ -154,7 +154,11 @@ def policy_scores(name, c, params=None):
     raise ValueError(name)
 
 
-def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None):
+def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None,
+              smart_slots=None):
+    """smart_slots: other seats that ALSO draft on value rather than consensus.
+    The default (None) makes every opponent a consensus-follower, which is the
+    optimistic case; a real league usually contains a few value drafters."""
     pos, ecr, vorp, proj = d["pos"], d["ecr"], d["vorp"], d["proj"]
     P = pos.shape[0]
     order = snake_order()
@@ -177,7 +181,8 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None):
         legal = allowed_mask(avail, pc_t, pos, rnd)
         _, th = lineup_and_thresholds(rv_t, d["repl"])
 
-        gap = jnp.where(rnd % 2 == 0, 2 * (N_TEAMS - 1 - my_slot) + 1, 2 * my_slot + 1)
+        # picks until THIS team's next turn (works for any seat, not just ours)
+        gap = jnp.where(rnd % 2 == 0, 2 * (N_TEAMS - 1 - t) + 1, 2 * t + 1)
         rank = jnp.argsort(jnp.argsort(perceived + jnp.where(avail, 0.0, 1e6), axis=1), axis=1)
         soon = (rank < gap) & avail
         nxt = [kth_available_vorp(avail, pos_order[g], pos_vorp[g],
@@ -187,7 +192,11 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None):
                    pos_count=pc_t, th=th, repl=d["repl"],
                    next_turn_vorp_by_pos=jnp.stack(nxt, axis=1))
 
-        score = jnp.where(t == my_slot, policy_scores(policy, ctx, params), -perceived)
+        smart = (t == my_slot)
+        if smart_slots:
+            for extra in smart_slots:
+                smart = smart | (t == extra)
+        score = jnp.where(smart, policy_scores(policy, ctx, params), -perceived)
         pick = jnp.argmax(jnp.where(legal, score, -jnp.inf), axis=1)
 
         avail = avail.at[ar, pick].set(False)
