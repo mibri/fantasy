@@ -112,7 +112,8 @@ def kth_available_vorp(avail, pos_order, pos_vorp, k):
     return ((a & (cum == k[:, None])) * pos_vorp[None, :]).sum(axis=1)
 
 
-POLICIES = ("MLV", "MLV_VONA", "BPA", "ECR", "ZERO_RB", "HERO_RB", "ROBUST_RB")
+POLICIES = ("MLV", "MLV_VONA", "BPA", "ECR", "ZERO_RB", "HERO_RB", "ROBUST_RB",
+            "LATE_QB4", "LATE_QB6", "LATE_QB8")
 
 
 def policy_scores(name, c, params=None):
@@ -151,6 +152,11 @@ def policy_scores(name, c, params=None):
     if name == "HERO_RB":
         got = c["pos_count"][:, RB] >= 1
         return mlv + jnp.where((pos == RB)[None, :] & got[:, None] & (rnd < 4), -1e4, 0.0)
+    if name.startswith("LATE_QB"):
+        # conventional wisdom: never take a quarterback early in a 1-QB league
+        block = int(name[-1])
+        return mlv - 0.5 * c["next_turn_vorp_by_pos"][:, pos] + \
+            jnp.where((pos == QB) & (rnd < block), -1e4, 0.0)[None, :]
     if name == "ROBUST_RB":
         return mlv + jnp.where((pos == RB) & (rnd < 2), 60.0, 0.0)[None, :]
     raise ValueError(name)
