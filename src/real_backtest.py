@@ -111,7 +111,7 @@ def draft(board, my_slot, policy, seed, noise=1.0, all_same=False, smart_slots=(
             th_arr = np.array([th[p] for p in POS])
             depth_arr = np.array([max(0, counts[t][p] - MIN_NEED[p]) for p in POS])
             gain = np.maximum(proj - th_arr[pc], 0.0)
-            bench = 0.25 * (0.45 ** depth_arr[pc]) * np.maximum(proj - rep_of, 0.0)
+            bench = 0.25 * (0.45 ** depth_arr[pc]) * (proj - rep_of)
             score = gain + bench
             if policy == "model_vona":
                 gap = 2 * (N_TEAMS - 1 - t) + 1 if rnd % 2 == 0 else 2 * t + 1

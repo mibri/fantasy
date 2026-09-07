@@ -315,17 +315,24 @@ because draft seeds within a year share that year's results.
 
 | Policy | Title rate | Playoffs | Wins |
 |---|---|---|---|
-| marginal lineup value | **0.177** | 0.710 | 8.29 |
-| MLV + opportunity cost | 0.170 | 0.707 | 8.18 |
+| marginal lineup value | **0.167** | 0.647 | 7.97 |
+| MLV + opportunity cost | 0.153 | 0.673 | 8.04 |
 | draft by consensus (ADP) | **0.083** | 0.430 | 6.74 |
 
 Drafting by consensus lands **exactly** on the 1-in-12 baseline, which is a
 reassuring sanity check. The model roughly doubles it, and gains **+1.55 wins
 per season** - a far better-powered statistic than title rate.
 
-Per season the model beat ADP in four years of five (it lost 2023). The
-difference averages +0.087 with a clustered SE of 0.043, so **t = 2.03 on 4
+The difference averages +0.070 with a clustered SE of 0.040, so **t = 1.75 on 4
 degrees of freedom** - suggestive, not conclusive. Five seasons is five seasons.
+
+An earlier version scored 0.177 (t = 2.03) with the bench term floored at zero.
+That floor was removed because it made every late-round candidate tie at exactly
++0, so the live tool's advice from about round 9 onward was whatever happened to
+sort first - it left rosters with two receivers. The backtest difference between
+the two forms is well inside the clustered standard error, so sensible tool
+behaviour was worth more than a number that could not be distinguished from
+noise. Recorded here rather than quietly keeping the better figure.
 
 **Mechanism.** The model builds rosters **+161 preseason points** stronger than
 the field, every year (range +141 to +178), against a natural spread among ADP
@@ -366,3 +373,24 @@ dominates, but a better process opens a gap several times that spread.
 (n = 40 per cell, so individual cells are noisy; the contrast is not.) Against
 even two other value drafters the measured edge is gone at this resolution. The
 edge is taken from opponents who do not have it.
+
+## An end-to-end test of the live tool (and three bugs it caught)
+
+The published draft board had only ever been checked at pick 1 with a full
+board. Driving it through a complete 180-pick draft in a real browser found
+three faults that would have wrecked a live draft:
+
+1. **No positional caps.** Nothing stopped it recommending a fifth kicker.
+2. **No K/DEF embargo.** It recommended a defense in round 5 and a kicker in
+   round 6, because both have low replacement levels, so *every* kicker scores
+   well above replacement.
+3. **A stale bench weight** of 0.70, left over from before the waiver-wire
+   retune, against 0.25 in the validated model.
+
+The resulting roster was 3 RB, 1 QB, 1 TE, **5 K and 5 DEF**, filling 7 of 10
+lineup slots. After the fix: a legal roster, 10/10 slots filled at every draft
+seat, and projected starters up from 1843 to ~2430.
+
+The lesson is not subtle. The simulator and the tool were two independent
+implementations of the same policy, and only the simulator was ever tested. Any
+logic a user actually touches needs its own end-to-end test.

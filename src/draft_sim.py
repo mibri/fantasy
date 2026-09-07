@@ -129,7 +129,9 @@ def policy_scores(name, c, params=None):
     bb = params.get("bench_base", BENCH_BASE)
     bd = params.get("bench_decay", BENCH_DECAY)
     bench_w = bb * (bd ** depth)
-    bench_gain = bench_w * jnp.maximum(proj[None, :] - c["repl"][pos][None, :], 0.0)
+    # not floored at zero: below replacement the ordering still carries
+    # information, and flooring makes every late candidate tie at exactly 0
+    bench_gain = bench_w * (proj[None, :] - c["repl"][pos][None, :])
     # `additive` stacks starter gain and depth value; otherwise a player is
     # counted as either a starter upgrade or bench depth, never both.
     mlv = jnp.where(params.get("additive", MLV_ADDITIVE),
