@@ -283,3 +283,86 @@ quarterback, about 4% of residual variance.
 **Caveat on power.** Five seasons, ~2,500 player-seasons, and a crude
 within-season rolling smoother as the market control. An effect of r = 0.10
 would be hard to detect here. "No signal found" is not "no signal exists".
+
+## Phase 1-2: backtest against REAL seasons
+
+The simulated-season results above have a structural weakness: the variance is a
+model output, so "the season is mostly luck" could be an artefact of how the
+season was generated. This section removes the simulated season entirely.
+
+**Design.** For each year 2021-2025, build the board from the preseason
+FantasyPros snapshot taken days before Week 1 and projections computed from
+*strictly prior* seasons (`src/historical.py` recomputes the finish-rank curve,
+persistence slopes and every player's ratio per year). Run a 12-team draft. Then
+score the resulting rosters on **what actually happened**: real weekly points,
+real injuries, real breakouts. Only the opponents' drafts stay simulated.
+
+Two design choices that matter:
+
+* **Lineups are set without hindsight.** Starters are the highest *preseason
+  projected* players among those who actually played that week - a manager knows
+  who is inactive, not who will score. Using the realised-optimal lineup would
+  inflate every team and specifically reward rostering boom/bust players nobody
+  would have started.
+* **Kickers and defenses are excluded** (absent from player-level weekly data,
+  last-two-round picks, near-identical noise for every team). The backtest is a
+  13-round draft with 8 starters.
+
+### A. Does the model actually draft better? (real outcomes)
+
+900 drafted teams, 5 real seasons, 12 seats, uncertainty clustered by season
+because draft seeds within a year share that year's results.
+
+| Policy | Title rate | Playoffs | Wins |
+|---|---|---|---|
+| marginal lineup value | **0.177** | 0.710 | 8.29 |
+| MLV + opportunity cost | 0.170 | 0.707 | 8.18 |
+| draft by consensus (ADP) | **0.083** | 0.430 | 6.74 |
+
+Drafting by consensus lands **exactly** on the 1-in-12 baseline, which is a
+reassuring sanity check. The model roughly doubles it, and gains **+1.55 wins
+per season** - a far better-powered statistic than title rate.
+
+Per season the model beat ADP in four years of five (it lost 2023). The
+difference averages +0.087 with a clustered SE of 0.043, so **t = 2.03 on 4
+degrees of freedom** - suggestive, not conclusive. Five seasons is five seasons.
+
+**Mechanism.** The model builds rosters **+161 preseason points** stronger than
+the field, every year (range +141 to +178), against a natural spread among ADP
+drafters of only ~50 points. That is roughly 3.2 standard deviations. (This
+metric is denominated in the model's own projections, so it explains *why*
+rather than proving anything - the proof is the real title rate above.)
+
+### B. Skill vs luck, measured on real seasons
+
+A league where all twelve seats draft the same way, so nobody has a process edge:
+
+| Measure | Real seasons | My simulation had |
+|---|---|---|
+| corr(preseason roster strength, actual wins) | **+0.133** | +0.152 |
+| share of one season's win variance explained | **1.8%** | ~2% |
+| strongest preseason roster wins the title | **9.7%** | 13.0% |
+| champion's mean strength rank (5.5 = chance) | **5.06** | - |
+
+**The simulated variance model was approximately right.** Real seasons behave
+much as it predicted, so "mostly luck" was not an artefact of how I generated
+the season. If anything the simulation was slightly *optimistic* about skill -
+the real strongest roster wins 9.7% of the time, not 13%.
+
+These two results are consistent, not contradictory: within a league of
+similarly-drafted teams the spread is only ~2.5% of roster value and luck
+dominates, but a better process opens a gap several times that spread.
+
+### C. The same field-strength collapse, on real seasons
+
+| Rival value drafters | My title rate | My wins |
+|---|---|---|
+| 0 | **27.5%** | 8.45 |
+| 2 | 7.5% | 7.92 |
+| 4 | 5.0% | 8.20 |
+| 6 | 7.5% | 7.75 |
+| 9 | 5.0% | 7.00 |
+
+(n = 40 per cell, so individual cells are noisy; the contrast is not.) Against
+even two other value drafters the measured edge is gone at this resolution. The
+edge is taken from opponents who do not have it.
