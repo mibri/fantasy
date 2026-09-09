@@ -163,7 +163,7 @@ def policy_scores(name, c, params=None):
 
 
 def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None,
-              smart_slots=None, opp_board=None):
+              smart_slots=None, opp_board=None, forced=None):
     """smart_slots: other seats that ALSO draft on value rather than consensus.
     The default (None) makes every opponent a consensus-follower, which is the
     optimistic case; a real league usually contains a few value drafters.
@@ -183,6 +183,12 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None,
         idx = np.where(np.array(pos) == g)[0]
         idx = idx[np.argsort(-np.array(vorp)[idx])]
         pos_order.append(jnp.array(idx)); pos_vorp.append(vorp[jnp.array(idx)]); pos_len.append(len(idx))
+
+    # forced[n] >= 0 pins overall pick n to a specific player, for A/B tests
+    forced_arr = jnp.full((N_PICKS,), -1, dtype=jnp.int32)
+    if forced:
+        for k, v in forced.items():
+            forced_arr = forced_arr.at[k].set(v)
 
     ar = jnp.arange(S)
 
@@ -219,6 +225,7 @@ def run_draft(d, my_slot, policy, S=1000, seed=0, ecr_noise=1.0, params=None,
             my_score = jnp.where(t == my_slot, my_score, opp_smart)
         score = jnp.where(smart, my_score, -perceived)
         pick = jnp.argmax(jnp.where(legal, score, -jnp.inf), axis=1)
+        pick = jnp.where(forced_arr[n] >= 0, forced_arr[n], pick)
 
         avail = avail.at[ar, pick].set(False)
         g = pos[pick]
