@@ -8,11 +8,16 @@ Anything the settings page did not state explicitly is marked ASSUMPTION.
 LEAGUE = dict(
     n_teams=12,
     platform="sleeper",
-    draft_type="snake",          # ASSUMPTION: Sleeper default; user unsure
-    starters=dict(QB=1, RB=2, WR=2, TE=1, FLEX=2, K=1, DST=1),
+    draft_type="snake",          # confirmed by the completed draft
+    # CORRECTED after the draft: the league uses NO KICKER. Nine starters, not
+    # ten, and fourteen rounds, not fifteen. Skill-position replacement levels
+    # are unaffected -- they are solved from QB/RB/WR/TE and the FLEX slots only,
+    # so the board ordering that drove the draft is unchanged.
+    starters=dict(QB=1, RB=2, WR=2, TE=1, FLEX=2, DST=1),
     flex_eligible=("RB", "WR", "TE"),
     bench=5,
     ir=1,
+    uses_kicker=False,
 )
 LEAGUE["n_starters"] = sum(LEAGUE["starters"].values())          # 10
 LEAGUE["roster_size"] = LEAGUE["n_starters"] + LEAGUE["bench"]   # 15
